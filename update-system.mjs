@@ -274,6 +274,7 @@ const SYSTEM_PATHS = [
   '.cursor/skills/',
   '.opencode/skills/',
   '.opencode/commands/',
+  '.gemini/commands/',
   '.claude-plugin/',
   '.qwen/',
   '.antigravitycli/skills/',

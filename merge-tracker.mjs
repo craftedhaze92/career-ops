@@ -37,9 +37,15 @@ const ADDITIONS_DIR = process.env.CAREER_OPS_ADDITIONS
   : join(CAREER_OPS, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
 // CAREER_OPS_BATCH_STATE overrides the batch-state.tsv path (used by tests).
+// Default derives from the resolved tracker's own workspace root (mirrors
+// resolvePdfIndexPath, #2471) rather than this script's install directory --
+// otherwise a test that only points CAREER_OPS_TRACKER at a sandbox still
+// reads the real repo's batch/batch-state.tsv, and a fixture whose report
+// number happens to collide with a real "failed" entry there gets silently
+// skipped as fabricated evidence.
 const BATCH_STATE_FILE = process.env.CAREER_OPS_BATCH_STATE
   ? process.env.CAREER_OPS_BATCH_STATE
-  : join(CAREER_OPS, 'batch/batch-state.tsv');
+  : join(resolveWorkspaceRoot(APPS_FILE), 'batch/batch-state.tsv');
 
 // Cross-check against batch-state.tsv (found 2026-07-30): a worker can write
 // a well-formed tracker TSV even when its own JSON result said "failed" --

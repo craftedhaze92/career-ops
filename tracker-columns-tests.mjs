@@ -51,6 +51,13 @@ function runScript(script, args, sandbox) {
     // Pinned for the same reason as the tracker: keep the fixture isolated from
     // the real reports/ dir. See makeSandbox.
     ...(sandbox.reports ? { CAREER_OPS_REPORTS: sandbox.reports } : {}),
+    // Without this, merge-tracker.mjs falls back to the real batch/batch-state.tsv
+    // (cwd is the real repo root) and can skip a fixture row whose report number
+    // happens to collide with a real report the developer's own batch runner
+    // marked "failed" -- a fixture using #42/#43 got silently skipped this way.
+    // Point at a sandboxed, nonexistent path so loadFailedReportNumbers() sees no
+    // failed reports (missing file degrades to an empty set).
+    CAREER_OPS_BATCH_STATE: join(sandbox.dir, 'batch-state.tsv'),
   };
   try {
     const stdout = execFileSync(NODE, [join(ROOT, script), ...args], {
@@ -619,8 +626,9 @@ if (!HAS_WEB) {
 
 // ── Test 17: pipe rows preserve empty interior cells ──────────────────────
 {
-  const EMPTY_PDF = '| 42 | 2026-01-01 | Foo | Bar Engineer | 4.0/5 | Evaluated |  | [42](reports/042-foo-2026-01-01.md) | some note |';
-  const EMPTY_NOTES = '| 43 | 2026-01-02 | Baz | Platform Engineer | 4.1/5 | Evaluated | ✅ | [43](reports/043-baz-2026-01-02.md) |  | Singapore';
+  // TSV column order (status BEFORE score): num,date,company,role,status,score,pdf,report,notes[,location]
+  const EMPTY_PDF = '42\t2026-01-01\tFoo\tBar Engineer\tEvaluated\t4.0/5\t\t[42](reports/042-foo-2026-01-01.md)\tsome note\n';
+  const EMPTY_NOTES = '43\t2026-01-02\tBaz\tPlatform Engineer\tEvaluated\t4.1/5\t✅\t[43](reports/043-baz-2026-01-02.md)\t\tSingapore\n';
   const sb = makeSandbox(HEADER_10, { '42-foo.tsv': EMPTY_PDF, '43-baz.tsv': EMPTY_NOTES });
   const res = runScript('merge-tracker.mjs', [], sb);
   const foo = dataRows(sb.tracker).find(l => l.includes('Foo'));
