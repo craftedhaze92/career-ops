@@ -584,7 +584,7 @@ async function runSelfTest() {
     const rows = [
       row(1, 'Acme Inc.', 'Applied', '2026-01-01'),
       row(2, 'ACME, INC', 'Applied', '2026-01-02'),
-      row(3, '株式会社', 'Applied', '2026-01-03'), // normalizeCompany -> "" (non a-z0-9)
+      row(3, '?', 'Applied', '2026-01-03'), // confidential-employer marker (#1596) -> normalizeCompany strips to ""
     ];
     const result = buildCompanyCards(
       { trackerRows: rows, followupRows: [], repostClusters: [], sourcesLoaded: { tracker: true, followups: false, scanHistory: false, statusLog: false } },
@@ -592,7 +592,7 @@ async function runSelfTest() {
     );
     check(result.companies.length === 1, 'case/punct company variants join under one key');
     check(result.companies[0].responsiveness.facts.length === 2, 'both joined rows contribute facts to the single card');
-    check(result.dataQuality.unjoinable === 1, 'empty-key company (non-Latin, strips to "") is excluded and counted as unjoinable');
+    check(result.dataQuality.unjoinable === 1, 'empty-key company ("?" confidential marker, strips to "") is excluded and counted as unjoinable');
   }
 
   // --- label goldens ---

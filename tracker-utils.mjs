@@ -43,11 +43,18 @@ export function rebuildRow(parts) {
  * consumer (merge-tracker dedup, set-status row resolution) the same stable
  * company key, so a row one script would match is never missed by another.
  *
+ * Unicode-aware (mirrors normalizeVia in tracker-parse.mjs, #1603): stripping
+ * only `[^a-z0-9]` collapsed every non-Latin-script company name (Korean,
+ * Japanese, Chinese, ...) to the same empty string, so two unrelated Korean
+ * companies with a similarly generic role title (e.g. "프론트엔드 개발자")
+ * were silently treated as the same tracker row. `\p{L}`/`\p{N}` keep any
+ * script's letters/digits instead of only ASCII.
+ *
  * @param {string} name - Company name from the tracker or an input row.
- * @returns {string} Lowercase alphanumeric company key.
+ * @returns {string} Lowercase alphanumeric company key (any script).
  */
 export function normalizeCompany(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return String(name ?? '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 }
 
 /**
